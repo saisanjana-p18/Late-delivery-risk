@@ -804,6 +804,43 @@ st.header("⚠️ Operations Action Panel")
 high_risk_df = filtered_df[
     filtered_df["Predicted_Probability"] >= risk_threshold
 ].copy()
+# Priority breakdown
+st.subheader("🎯 Intervention Priority")
+
+immediate_count = (
+    filtered_df["Predicted_Probability"] >= 0.85
+).sum()
+
+priority_count = (
+    (filtered_df["Predicted_Probability"] >= 0.66) &
+    (filtered_df["Predicted_Probability"] < 0.85)
+).sum()
+
+monitor_count = (
+    (filtered_df["Predicted_Probability"] >= risk_threshold) &
+    (filtered_df["Predicted_Probability"] < 0.66)
+).sum()
+
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    "🚨 Immediate Intervention",
+    f"{immediate_count:,}"
+)
+
+col2.metric(
+    "⚠️ Prioritise & Monitor",
+    f"{priority_count:,}"
+)
+
+col3.metric(
+    "👀 Monitor",
+    f"{monitor_count:,}"
+)
+
+st.caption(
+    "Priority levels are based on predicted delivery-risk probability."
+)
 
 if len(high_risk_df) > 0:
 
