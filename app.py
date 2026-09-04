@@ -753,7 +753,3 @@ st.write("""
 The dashboard supports proactive identification and prioritisation
 of potentially delayed shipments.
 """)
-
-st.success(
-    "Dashboard successfully loaded using the trained XGBoost model."
-)
