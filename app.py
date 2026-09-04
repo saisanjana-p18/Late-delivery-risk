@@ -135,7 +135,7 @@ selected_segment = st.sidebar.selectbox(
 )
 
 risk_threshold = st.sidebar.slider(
-   "Action Queue Risk Threshold",
+    "Action Queue Risk Threshold",
     min_value=0.0,
     max_value=1.0,
     value=0.66,
