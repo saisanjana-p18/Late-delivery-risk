@@ -593,6 +593,99 @@ else:
     st.success(
         "🎉 No orders currently exceed the selected risk threshold."
     )
+    # -----------------------------
+# Model Evaluation
+# -----------------------------
+st.header("📊 Model Evaluation")
+
+st.write(
+    "The trained XGBoost model is evaluated using standard classification "
+    "metrics on the test dataset."
+)
+
+try:
+    # Load saved evaluation results
+    metrics_df = pd.read_csv("model_metrics.csv")
+    confusion_df = pd.read_csv("confusion_matrix.csv", index_col=0)
+
+    # -----------------------------
+    # Evaluation Metrics
+    # -----------------------------
+    st.subheader("📈 Classification Performance")
+
+    metric_cols = st.columns(5)
+
+    for col, (_, row) in zip(metric_cols, metrics_df.iterrows()):
+        with col:
+            col.metric(
+                row["Metric"],
+                f'{row["Score"]:.2%}'
+            )
+
+    # -----------------------------
+    # Confusion Matrix
+    # -----------------------------
+    st.subheader("🔍 Confusion Matrix")
+
+    fig_cm = px.imshow(
+        confusion_df,
+        text_auto=True,
+        aspect="auto",
+        labels={
+            "x": "Predicted Class",
+            "y": "Actual Class",
+            "color": "Orders"
+        },
+        title="XGBoost Confusion Matrix"
+    )
+
+    st.plotly_chart(fig_cm, use_container_width=True)
+
+    # -----------------------------
+    # Business Interpretation
+    # -----------------------------
+    st.subheader("📌 Business Interpretation")
+
+    st.markdown("""
+    **Accuracy (70.32%)**  
+    The model correctly classifies approximately 70% of the orders.
+
+    **Precision (79.29%)**  
+    When the model flags an order as late-risk, approximately 79% of the
+    flagged orders are actually late. This helps reduce unnecessary
+    operational interventions.
+
+    **Recall (62.08%)**  
+    The model identifies approximately 62% of the actual late deliveries.
+    This means some late orders may remain undetected.
+
+    **F1 Score (69.64%)**  
+    The F1 score provides a balance between precision and recall and
+    indicates a moderate overall classification performance.
+
+    **ROC-AUC (77.27%)**  
+    The ROC-AUC indicates that the model has good ability to distinguish
+    between late-risk and on-time orders.
+    """)
+
+    # -----------------------------
+    # Operational Interpretation
+    # -----------------------------
+    st.subheader("🚚 Operational Implication")
+
+    st.info(
+        "The model can be used as an early-warning system to prioritize "
+        "orders that require operational attention. Higher-risk orders "
+        "can be reviewed first for proactive intervention such as "
+        "rerouting, shipment prioritization, or customer communication."
+    )
+
+except Exception:
+    st.warning(
+        "Model evaluation files could not be loaded. "
+        "Please ensure model_metrics.csv and confusion_matrix.csv "
+        "are present in the project repository."
+    )
 
 # -----------------------------
 # Model Explainability
