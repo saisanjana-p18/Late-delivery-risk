@@ -335,6 +335,72 @@ fig = px.bar(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+# -----------------------------
+# Regional Contribution to High-Risk Orders
+# -----------------------------
+st.header("📌 Regional Contribution to High-Risk Orders")
+
+regional_high_risk = filtered_df[
+    filtered_df["Predicted_Probability"] >= risk_threshold
+].copy()
+
+if len(regional_high_risk) > 0:
+
+    region_contribution = (
+        regional_high_risk
+        .groupby("Order Region")
+        .size()
+        .reset_index(name="High_Risk_Orders")
+    )
+
+    region_contribution["Contribution_%"] = (
+        region_contribution["High_Risk_Orders"]
+        / region_contribution["High_Risk_Orders"].sum()
+        * 100
+    )
+
+    region_contribution = region_contribution.sort_values(
+        "Contribution_%",
+        ascending=False
+    )
+
+    fig = px.bar(
+        region_contribution,
+        x="Contribution_%",
+        y="Order Region",
+        orientation="h",
+        text="Contribution_%",
+        title="Regional Contribution to High-Risk Orders"
+    )
+
+    fig.update_traces(
+        texttemplate="%{text:.1f}%",
+        textposition="outside"
+    )
+
+    fig.update_layout(
+        xaxis_title="Contribution to High-Risk Orders (%)",
+        yaxis_title="Order Region"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    top_region = region_contribution.iloc[0]
+
+    st.info(
+        f"📍 **{top_region['Order Region']}** contributes the "
+        f"largest share of high-risk orders, accounting for "
+        f"**{top_region['Contribution_%']:.1f}%** of high-risk "
+        f"orders under the current filters."
+    )
+
+else:
+    st.success(
+        "No high-risk orders are present under the selected filters."
+    )
 
 # -----------------------------
 # Customer Segment Analysis
