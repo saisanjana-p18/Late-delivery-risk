@@ -612,6 +612,7 @@ if len(filtered_df) > 0:
 
 else:
     st.warning("No orders match the selected filters.")
+
 # -----------------------------
 # High-Risk Order Contribution
 # -----------------------------
@@ -679,6 +680,55 @@ if len(filtered_df) > 0:
         st.success(
             "No high-risk orders are present under the selected filters."
         )
+# -----------------------------
+# Cross-Filtered Risk Analysis
+# -----------------------------
+st.header("🔄 Shipping Mode × Customer Segment Risk")
+
+if len(filtered_df) > 0:
+
+    cross_analysis = (
+        filtered_df
+        .groupby(["Shipping Mode", "Customer Segment"])
+        ["Predicted_Probability"]
+        .mean()
+        .reset_index()
+    )
+
+    cross_analysis["Average_Risk"] = (
+        cross_analysis["Predicted_Probability"] * 100
+    )
+
+    fig = px.bar(
+        cross_analysis,
+        x="Shipping Mode",
+        y="Average_Risk",
+        color="Customer Segment",
+        barmode="group",
+        title="Average Predicted Risk by Shipping Mode and Customer Segment"
+    )
+
+    fig.update_layout(
+        yaxis_title="Average Predicted Risk (%)",
+        xaxis_title="Shipping Mode"
+    )
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    highest_combination = cross_analysis.loc[
+        cross_analysis["Average_Risk"].idxmax()
+    ]
+
+    st.info(
+        f"🔍 The highest-risk combination is **"
+        f"{highest_combination['Shipping Mode']} + "
+        f"{highest_combination['Customer Segment']}**, "
+        f"with an average predicted risk of "
+        f"**{highest_combination['Average_Risk']:.1f}%**."
+    )
 
 # -----------------------------
 # High-risk operations panel
