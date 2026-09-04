@@ -135,7 +135,7 @@ selected_segment = st.sidebar.selectbox(
 )
 
 risk_threshold = st.sidebar.slider(
-    "High-Risk Threshold",
+   "Action Queue Risk Threshold",
     min_value=0.0,
     max_value=1.0,
     value=0.66,
@@ -817,7 +817,7 @@ priority_count = (
 ).sum()
 
 monitor_count = (
-    (filtered_df["Predicted_Probability"] >= risk_threshold) &
+    (filtered_df["Predicted_Probability"] >= min(risk_threshold, 0.66)) &
     (filtered_df["Predicted_Probability"] < 0.66)
 ).sum()
 
