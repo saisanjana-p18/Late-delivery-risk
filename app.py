@@ -816,7 +816,7 @@ priority_count = (
     (filtered_df["Predicted_Probability"] < 0.85)
 ).sum()
 
-monitor_count = (
+ = (
     (filtered_df["Predicted_Probability"] >= min(risk_threshold, 0.66)) &
     (filtered_df["Predicted_Probability"] < 0.66)
 ).sum()
