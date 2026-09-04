@@ -612,6 +612,73 @@ if len(filtered_df) > 0:
 
 else:
     st.warning("No orders match the selected filters.")
+# -----------------------------
+# High-Risk Order Contribution
+# -----------------------------
+st.header("📌 High-Risk Order Contribution")
+
+if len(filtered_df) > 0:
+
+    contribution_df = filtered_df[
+        filtered_df["Predicted_Probability"] >= risk_threshold
+    ].copy()
+
+    if len(contribution_df) > 0:
+
+        contribution = (
+            contribution_df
+            .groupby("Shipping Mode")
+            .size()
+            .reset_index(name="High_Risk_Orders")
+        )
+
+        contribution["Contribution_%"] = (
+            contribution["High_Risk_Orders"]
+            / contribution["High_Risk_Orders"].sum()
+            * 100
+        )
+
+        contribution = contribution.sort_values(
+            "Contribution_%",
+            ascending=False
+        )
+
+        fig = px.bar(
+            contribution,
+            x="Shipping Mode",
+            y="Contribution_%",
+            text="Contribution_%",
+            title="Contribution of Shipping Modes to High-Risk Orders"
+        )
+
+        fig.update_traces(
+            texttemplate="%{text:.1f}%",
+            textposition="outside"
+        )
+
+        fig.update_layout(
+            yaxis_title="Contribution to High-Risk Orders (%)",
+            xaxis_title="Shipping Mode"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+        top_contributor = contribution.iloc[0]
+
+        st.info(
+            f"🚚 **{top_contributor['Shipping Mode']}** contributes "
+            f"the largest share of high-risk orders, accounting for "
+            f"**{top_contributor['Contribution_%']:.1f}%** of the "
+            f"high-risk orders under the current filters."
+        )
+
+    else:
+        st.success(
+            "No high-risk orders are present under the selected filters."
+        )
 
 # -----------------------------
 # High-risk operations panel
