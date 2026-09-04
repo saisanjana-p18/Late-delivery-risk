@@ -536,6 +536,82 @@ if predict_button:
         )
 
     st.markdown("---")
+    # -----------------------------
+# Operational Risk Insights
+# -----------------------------
+st.header("💡 Operational Risk Insights")
+
+if len(filtered_df) > 0:
+
+    highest_mode = (
+        filtered_df.groupby("Shipping Mode")["Predicted_Probability"]
+        .mean()
+        .idxmax()
+    )
+
+    highest_mode_risk = (
+        filtered_df.groupby("Shipping Mode")["Predicted_Probability"]
+        .mean()
+        .max() * 100
+    )
+
+    highest_region = (
+        filtered_df.groupby("Order Region")["Predicted_Probability"]
+        .mean()
+        .idxmax()
+    )
+
+    highest_region_risk = (
+        filtered_df.groupby("Order Region")["Predicted_Probability"]
+        .mean()
+        .max() * 100
+    )
+
+    highest_segment = (
+        filtered_df.groupby("Customer Segment")["Predicted_Probability"]
+        .mean()
+        .idxmax()
+    )
+
+    immediate_orders = (
+        filtered_df["Predicted_Probability"] >= 0.85
+    ).sum()
+
+    insight_col1, insight_col2 = st.columns(2)
+
+    with insight_col1:
+        st.info(
+            f"🚚 **Highest-risk shipping mode:** {highest_mode} "
+            f"with an average predicted risk of "
+            f"**{highest_mode_risk:.1f}%**."
+        )
+
+        st.info(
+            f"📍 **Highest-risk region:** {highest_region} "
+            f"with an average predicted risk of "
+            f"**{highest_region_risk:.1f}%**."
+        )
+
+    with insight_col2:
+        st.info(
+            f"👥 **Highest-risk customer segment:** "
+            f"{highest_segment}."
+        )
+
+        st.warning(
+            f"🚨 **Immediate intervention queue:** "
+            f"{immediate_orders:,} orders have predicted risk "
+            f"of **85% or above**."
+        )
+
+    st.markdown(
+        "These insights help operations teams prioritize "
+        "high-risk shipping modes, regions, customer segments, "
+        "and individual orders for proactive intervention."
+    )
+
+else:
+    st.warning("No orders match the selected filters.")
 
 # -----------------------------
 # High-risk operations panel
