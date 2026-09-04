@@ -366,6 +366,176 @@ fig.update_traces(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+# -----------------------------
+# Order-Level Risk Prediction
+# -----------------------------
+st.header("🔮 Order-Level Risk Prediction")
+
+st.write(
+    "Enter key order details to estimate the probability of late delivery."
+)
+
+with st.form("order_prediction_form"):
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        input_shipping_mode = st.selectbox(
+            "Shipping Mode",
+            sorted(prediction_df["Shipping Mode"].dropna().unique())
+        )
+
+        input_market = st.selectbox(
+            "Market",
+            sorted(prediction_df["Market"].dropna().unique())
+        )
+
+    with col2:
+        input_segment = st.selectbox(
+            "Customer Segment",
+            sorted(prediction_df["Customer Segment"].dropna().unique())
+        )
+
+        input_scheduled_days = st.number_input(
+            "Scheduled Shipping Days",
+            min_value=0,
+            max_value=10,
+            value=2,
+            step=1
+        )
+
+    with col3:
+        input_quantity = st.number_input(
+            "Order Item Quantity",
+            min_value=1,
+            max_value=20,
+            value=1,
+            step=1
+        )
+
+        input_benefit = st.number_input(
+            "Benefit per Order",
+            value=0.0,
+            step=1.0
+        )
+
+    predict_button = st.form_submit_button(
+        "🚀 Predict Delivery Risk"
+    )
+
+
+if predict_button:
+
+    # Start with a real row so every model-required
+    # feature is present
+    input_row = prediction_df.drop(
+        columns=[
+            "Predicted_Probability",
+            "Predicted_Risk"
+        ],
+        errors="ignore"
+    ).iloc[[0]].copy()
+
+    # Replace user-selected values
+    input_row["Shipping Mode"] = input_shipping_mode
+    input_row["Market"] = input_market
+    input_row["Customer Segment"] = input_segment
+    input_row["Days for shipment (scheduled)"] = input_scheduled_days
+    input_row["Order Item Quantity"] = input_quantity
+    input_row["Benefit per order"] = input_benefit
+
+    # Recalculate engineered features
+    input_row["Shipping_Pressure_Index"] = (
+        input_row["Order Item Quantity"] /
+        (input_row["Days for shipment (scheduled)"] + 1)
+    )
+
+    input_row["Express_Mode_Flag"] = (
+        input_row["Shipping Mode"]
+        .isin(["First Class", "Same Day"])
+        .astype(int)
+    )
+
+    # Predict probability
+    individual_probability = model.predict_proba(
+        input_row
+    )[:, 1][0]
+
+    # Risk category
+    if individual_probability <= 0.33:
+        individual_risk = "🟢 Low Risk"
+        recommendation = (
+            "Normal monitoring is sufficient."
+        )
+
+    elif individual_probability <= 0.66:
+        individual_risk = "🟡 Medium Risk"
+        recommendation = (
+            "Monitor the shipment closely and "
+            "consider prioritisation."
+        )
+
+    else:
+        individual_risk = "🔴 High Risk"
+        recommendation = (
+            "Immediate intervention should be considered "
+            "to reduce the possibility of delay."
+        )
+
+    # Display result
+    st.markdown("---")
+    st.subheader("📌 Prediction Result")
+
+    result_col1, result_col2 = st.columns(2)
+
+    with result_col1:
+        st.metric(
+            "Predicted Late Delivery Probability",
+            f"{individual_probability * 100:.2f}%"
+        )
+
+    with result_col2:
+        st.metric(
+            "Risk Category",
+            individual_risk
+        )
+
+    st.info(
+        f"💡 **Recommended Action:** {recommendation}"
+    )
+
+    # Key risk indicators
+    st.subheader("🔍 Key Risk Indicators")
+
+    if input_scheduled_days <= 1:
+        st.warning(
+            "Short scheduled shipping time may increase delivery pressure."
+        )
+
+    if input_shipping_mode == "First Class":
+        st.warning(
+            "First Class shipping is associated with elevated "
+            "late-delivery risk in the dataset."
+        )
+
+    if input_quantity >= 5:
+        st.warning(
+            "Higher order quantity increases the shipping "
+            "pressure index."
+        )
+
+    if input_shipping_mode == "Same Day":
+        st.success(
+            "Same Day shipping selected."
+        )
+
+    if input_scheduled_days >= 4:
+        st.success(
+            "A longer scheduled shipping window may provide "
+            "more operational flexibility."
+        )
+
+    st.markdown("---")
 
 # -----------------------------
 # High-risk operations panel
